@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "nordic-arm-gcc",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/**"
+            ],
+            "defines": ["BOARD_PCA10056", "BSP_DEFINES_ONLY", "CONFIG_GPIO_AS_PINRESET", "FLOAT_ABI_HARD", "NRF52840_XXAA"],
+            "macFrameworkPath": [],
+            "compilerPath": "/usr/local/bin/arm-none-eabi-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "macos-gcc-arm"
+        }
+    ],
+    "version": 4
+}

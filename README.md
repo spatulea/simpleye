@@ -23,12 +23,12 @@ In addition to the MCU and radio, the nano 33 BLE includes a good variety of sen
 The camera breakout board included with the ML kit hosts an Omnivision [OV07675](https://www.ovt.com/products/ov07675-a23a/) VGA (640x480) image sensor. The sensor has a parallel output interface (DVP, 8-pin) for image data and a SCCB (I2C) serial interface for control and configuration.
 
 ## The Software
-The `functional goal` is a machine vision application that can identify a wide range of objects in the video frame and "compress" the image data into object metadata in near-realtime (1fps or better?) and reasolable (80%?) accuracy.
+The *functional goal* is a machine vision application that can identify a wide range of objects in the video frame and "compress" the image data into object metadata in near-realtime (1fps or better?) and reasolable (80%?) accuracy.
 
-The `project goal` is to refresh and increase my knowledge of embedded C++ development while learning about practical implementations of neural networks in heavily resource-constrained systems.
+The *project goal* is to refresh and increase my knowledge of embedded C++ development while learning about practical implementations of neural networks in heavily resource-constrained systems.
 
 ### Embedded code
-The embedded software implementation will be a bare-metal C++ application that samples the camera, runs inference using a pre-compiled Tensorflow Micro neural network, and outputs text data that is descriprive of the scene (exact output format TBD). A stretch goal is to output the data over BLE to a mobile app that then resconstructs the scene using only the received input.
+The embedded software implementation will be a bare-metal C and/or C++ application that samples the camera, runs inference using a pre-compiled Tensorflow Micro neural network, and outputs text data that is descriprive of the scene (exact output format TBD). A stretch goal is to output the data over BLE to a mobile app that then resconstructs the scene using only the received input.
 
 Embedded development will take place in VSCode using Make & arm-gcc for compilation and open-OCD & GDB for debugging. The goal is to avoid proprietary IDE and debugging tools at all costs short of not completing the project. While this is an Arduino kit, the goal is also to avoid Arduino tools (see [functional goal](#the-software) above).
 
@@ -39,3 +39,17 @@ Building and training the NN model will be done in Python and generally follow t
 
 ## The Plan
 The development plan and progress are documented in [PLAN.md](PLAN.md).
+
+## Compiling
+The Nordic nRF5 SDK is required to compile and should be located at `../nRF5_SDK_17.1.0/` or it location should be updated in the [Makefile](Makefile). The code is developed and tested with only version 17.1.0 of the SDK.
+
+The SDK's platform-specific makefile
+```
+nRF5_SDK_17.1.0/components/toolchain/gcc/Makefile.yourSystem
+``` 
+may need updating to point to the arm-gcc compiler on your system. On MacOS, `Makefile.posyx` should be updated to point to `/usr/local/bin/` if installed with `brew`:
+```
+GNU_INSTALL_ROOT ?= /usr/local/bin/
+GNU_VERSION ?= 9.2.1
+GNU_PREFIX ?= arm-none-eabi
+```
