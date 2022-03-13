@@ -41,13 +41,13 @@ Building and training the NN model will be done in Python and generally follow t
 The development plan and progress are documented in [PLAN.md](PLAN.md).
 
 ## Compiling
-The Nordic nRF5 SDK is required to compile and should be located at `../nRF5_SDK_17.1.0/` or it location should be updated in the [Makefile](Makefile). The code is developed and tested with only version 17.1.0 of the SDK.
+The Nordic nRF5 SDK is required for compilation and should be located at `../nRF5_SDK_17.1.0/` or its location should be updated in the [Makefile](Makefile). Note that simpleye is developed and tested only with version 17.1.0 of the *nRF5 SDK*, not the nRF Connect SDK, which is a very different framework that relies on Zephyr RTOS.
 
 The SDK's platform-specific makefile
 ```
 nRF5_SDK_17.1.0/components/toolchain/gcc/Makefile.yourSystem
 ``` 
-may need updating to point to the arm-gcc compiler on your system. On MacOS, `Makefile.posyx` should be updated to point to `/usr/local/bin/` if installed with `brew`:
+may need updating to point to the arm-gcc compiler location for your system. On MacOS, `Makefile.posix` should point to `/usr/local/bin/` if installed with `brew`:
 ```
 GNU_INSTALL_ROOT ?= /usr/local/bin/
 GNU_VERSION ?= 9.2.1
