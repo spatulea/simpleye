@@ -1,3 +1,39 @@
+# March 13, 2022 - A slow blink
+It builds! It blinks! But it doesn't talk. Yet. Ok, the good news first:
+## Building for the nano 33
+The nRF5 SDK is somewhat "board focused" in its BSP implementation. I guess the expectation is that development is initially taking place using one of their evaluation boards. Long story short, the makefile now includes a board definition: 
+```
+CFLAGS += -DCUSTOM_BOARD_INC=board
+```
+So that `boards.h` can correctly parse and include `board.h`, the "BSP" header for this specific board:
+```C
+#elif defined (CUSTOM_BOARD_INC)
+  #include STRINGIFY(CUSTOM_BOARD_INC.h)
+```
+To be fair, it would be simpler to just edit the `boards.h` file directly and get rid of the unused compiler conditionals, but that would against the spirit of a SDK or library. I may change my mind in the future and pull relevant parts of the SDK into this codebase, but for now I would rather treat it like an included library. On one hand, it would simplify the makefile and improve the accuracy of VSCode's intellisense by removing unused files. On the other, it's nice to separate the application code from Nordic's SDK and not "adopt" the SDK source. We'll see how the project progresses and re-evaluate as it makes sense.
+### Flashing
+One detail to note is that I decided to keep Arduino's bootloader in the flash memory for now in case it's useful later. With 1MB of NVM I'm not worried about running out of space. The linker script `simpleye_gcc_nrf52.ld` had to be modified to skip over the first 0x10000 addresses:
+```C
+/* Note, flash origin changed to 0x10000 to avoid overwriting the bootloader */
+MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x10000, LENGTH = 0x100000
+  RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
+}
+```
+## Debug serial output
+The easiest way to get a serial console with ARM's SWD interface is typically by using the SWO output from the MCU. Most debuggers conveniently include a UART input for it and voila! Easy printf console debugging! Not so with the nano 33... There is no exposed SWO pad with the other SWD signals (makes sense- SWO is not needed for programming during manufacturing) and the MCU's SWO pin was repurposed to... to be a pull-up voltage for I2C resistors?
+
+<img src="assets/swo_pullup1.jpg" height=80/> <img src="assets/swo_pullup2.jpg" height=80/>
+So that's interesting... not quite sure why the I2C resistors need a programmable pull-up, or why of available GPIOs it had to be SWO pin. That leave us with some alternative options:
+
+1. If I2C1 is not used, then wire up the debugger's SWO input to the two resistor's "top side"
+2. Repurpose another GPIO that is brought out to a board connector pin, solder the debugger to that pin and direct debug prints to that GPIO/UART
+3. Configure the USB connection as a TTY device and send debug output that way
+
+Option 3 is definitely tempting and elegant (no soldering), although I fear that resetting the MCU (like during programming) will disconnect the TTY device and require reconnecting every time, which gets annoying.
+
+
 # March 11, 2022 - A slow start
 The project is off to a slow start. Using an Arduino board as a "dev" board while bypassing the Arduino framework is not as straightforward as I'd initially thought. Long story below, but the TLDR is: **the nano 33 BLE needs an external debugger and soldering to its SWD programming interface in order to load and debug custom firmware.**
 
