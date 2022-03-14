@@ -3,9 +3,11 @@
 SEARCH_DIR(.)
 GROUP(-lgcc -lc -lnosys)
 
+
+/* Note, flash origin changed to 0x10000 to avoid overwriting the bootloader */
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x0, LENGTH = 0x100000
+  FLASH (rx) : ORIGIN = 0x10000, LENGTH = 0x100000
   RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
 }
 
