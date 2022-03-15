@@ -4,7 +4,14 @@
             "name": "nordic-arm-gcc",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/../nRF5_SDK_17.1.0/**"
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/ble/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/drivers_nrf/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/libraries/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/serialization/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/softdevice/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/components/toolchain/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/modules/**"
             ],
             "defines": ["BOARD_PCA10056", "BSP_DEFINES_ONLY", "CONFIG_GPIO_AS_PINRESET", "FLOAT_ABI_HARD", "NRF52840_XXAA"],
             "macFrameworkPath": [],
