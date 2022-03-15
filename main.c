@@ -39,18 +39,19 @@
  */
 /** @file
  *
- * @defgroup blinky_example_main main.c
+ * @defgroup simpleye_main main.c
  * @{
- * @ingroup blinky_example
- * @brief Blinky Example Application main file.
+ * @ingroup simpleye
+ * @brief simpleye main file.
  *
- * This file contains the source code for a sample application to blink LEDs.
+ * This file contains the source code for simpleye.
  *
  */
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
+#include "nrf_gpio.h"
 #include "board.h"
 
 /**
@@ -58,10 +59,6 @@
  */
 int main(void)
 {
-    /* Configure board. */
-    bsp_board_init(BSP_INIT_LEDS);
-
-
     // Ensure REGOUT0 is set to 3.0V to make sure we can interface with SWD
     // if UICR (???) is ever erased
     // See https://devzone.nordicsemi.com/guides/short-range-guides/b/getting-started/posts/nrf52840-dongle-programming-tutorial
@@ -81,15 +78,13 @@ int main(void)
         NVIC_SystemReset();
     }
 
+    nrf_gpio_cfg_output(LED_R);
+
     /* Toggle LEDs. */
     while (true)
     {
-        for (int i = 0; i < LEDS_NUMBER; i++)
-        {
-            bsp_board_led_invert(i);
-            nrf_delay_ms(500);
-            bsp_board_led_invert(i);
-        }
+        nrf_gpio_pin_toggle(LED_R);
+        nrf_delay_ms(500);
     }
 }
 

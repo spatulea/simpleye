@@ -40,16 +40,11 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "boards.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// LEDs definitions for nano33 BLE board
-// 4 LEDs: 1 RGB LED and 1 standalone green
-// Orange LED not included here (is on SCK line?)
-#define LEDS_NUMBER    4
+
 
 #define LED_R          NRF_GPIO_PIN_MAP(0,24)
 #define LED_G          NRF_GPIO_PIN_MAP(0,16)
@@ -60,41 +55,41 @@ extern "C" {
 // as SWO
 // #define I2C1_PULLUP     NRF_GPIO_PIN_MAP(1,0)
 
-#define LEDS_ACTIVE_STATE 0
+// #define LEDS_ACTIVE_STATE 0
 
-#define LEDS_LIST { LED_R, LED_G, LED_B, LED_GS }
+// #define LEDS_LIST { LED_R, LED_G, LED_B, LED_GS }
 
-// TODO what is function of BSP_LED_0?
-#define BSP_LED_0      LED_GS
+// // TODO what is function of BSP_LED_0?
+// #define BSP_LED_0      LED_GS
 
-// This seems to be a bitmask for the BSP_LEDs, unclear what they do
-#define LEDS_INV_MASK  0
+// // This seems to be a bitmask for the BSP_LEDs, unclear what they do
+// #define LEDS_INV_MASK  0
 
-// The only button on the nano 33 BLE is a hardware reset button
-#define BUTTONS_NUMBER 0
+// // The only button on the nano 33 BLE is a hardware reset button
+// #define BUTTONS_NUMBER 0
 
-// There is a button on the shield, but it's connected to a "SCK"
-// GPIO that is also an orange LED?
-// TODO comment if conflicting with LED function
-#define BUTTON_SCK    NRF_GPIO_PIN_MAP(0,13)
-#define BUTTONS_ACTIVE_STATE 0
+// // There is a button on the shield, but it's connected to a "SCK"
+// // GPIO that is also an orange LED?
+// // TODO comment if conflicting with LED function
+// #define BUTTON_SCK    NRF_GPIO_PIN_MAP(0,13)
+// #define BUTTONS_ACTIVE_STATE 0
 
-#define BUTTONS_LIST { BUTTON_SCK }
+// #define BUTTONS_LIST { BUTTON_SCK }
 
-// TODO what is function of BSP_BUTTON_0?
-#define BSP_BUTTON_0   BUTTON_SCK
+// // TODO what is function of BSP_BUTTON_0?
+// #define BSP_BUTTON_0   BUTTON_SCK
 
-// There is no "schematic defined" UART (no pins assigned a UART function on
-// the scmatic). However, the shield exposes "analog" pins A6 and A7 which 
-// are not used by any on-board peripheral and can be connected to the UART 
-// peripheral for debugging!
+// // There is no "schematic defined" UART (no pins assigned a UART function on
+// // the scmatic). However, the shield exposes "analog" pins A6 and A7 which 
+// // are not used by any on-board peripheral and can be connected to the UART 
+// // peripheral for debugging!
 
-// TODO these two pins might not want to be "gpio pin maps"
-#define RX_PIN_NUMBER  NRF_GPIO_PIN_MAP(0,28) // pin GPIO17_A net AIN4_A6
-#define TX_PIN_NUMBER  NRF_GPIO_PIN_MAP(0,03) // pin GPIO16_A net AIN1_A7
-#define CTS_PIN_NUMBER UART_PIN_DISCONNECTED
-#define RTS_PIN_NUMBER UART_PIN_DISCONNECTED
-#define HWFC           false
+// // TODO these two pins might not want to be "gpio pin maps"
+// #define RX_PIN_NUMBER  NRF_GPIO_PIN_MAP(0,28) // pin GPIO17_A net AIN4_A6
+// #define TX_PIN_NUMBER  NRF_GPIO_PIN_MAP(0,03) // pin GPIO16_A net AIN1_A7
+// #define CTS_PIN_NUMBER UART_PIN_DISCONNECTED
+// #define RTS_PIN_NUMBER UART_PIN_DISCONNECTED
+// #define HWFC           false
 
 
 #ifdef __cplusplus
