@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "build",
+      "command": "make",
+      "args": [
+        ""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "Build using makefile",
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "build_flash",
+      "command": "make",
+      "args": [
+        "clean",
+        "flash"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "detail": "Build and flash",
+      "problemMatcher": [
+        "$gcc"
+      ]
+    }
+  ],
+  "version": "2.0.0"
+}
