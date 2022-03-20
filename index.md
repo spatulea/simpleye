@@ -38,6 +38,7 @@ MEMORY
 The easiest way to get a serial console with ARM's SWD interface is typically by using the SWO output from the MCU. Most debuggers conveniently include a UART input for it and voila! Easy printf console debugging! Not so with the nano 33... There is no exposed SWO pad with the other SWD signals (makes sense- SWO is not needed for programming during manufacturing) and the MCU's SWO pin was repurposed to... to be a pull-up voltage for I2C resistors?
 
 <img src="assets/swo_pullup1.jpg" height=80/> <img src="assets/swo_pullup2.jpg" height=80/>
+
 So that's interesting... not quite sure why the I2C resistors need a programmable pull-up, or why of available GPIOs it had to be SWO pin. That leave us with some alternative options:
 
 1. If I2C1 is not used, then wire up the debugger's SWO input to the two resistor's "top side"
