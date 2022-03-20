@@ -44,13 +44,10 @@
 extern "C" {
 #endif
 
-
-
 #define LED_R          NRF_GPIO_PIN_MAP(0,24)
 #define LED_G          NRF_GPIO_PIN_MAP(0,16)
 #define LED_B          NRF_GPIO_PIN_MAP(0,6)
 #define LED_GS         NRF_GPIO_PIN_MAP(1,9)
-
 
 // UART pin definitions
 #define RX_PIN_NUMBER 28    // Using shield "A6"
@@ -59,7 +56,6 @@ extern "C" {
 #define CTS_PIN_NUMBER UART_PIN_DISCONNECTED
 // Disable HW flow control
 #define UART_HWFC APP_UART_FLOW_CONTROL_DISABLED
-
 
 // TODO Uncomment this line to use I2C1, otherwise it can be used
 // as SWO
