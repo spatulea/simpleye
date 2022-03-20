@@ -1,3 +1,16 @@
+# March 19, 2022 - Give me SDO
+The SWO situation almost got out of control. But first a quick recap: the nano 33 has no SWO signal included with its SWD pads. The SWO GPIO from the NINA-B306 module is being used on the nano 33 board as a pull-up for SCL & SDA I2C signals. As such, it is not externally accessible (not available on any connector or pads) and the pull-up resistors are not labeled on the PCB. So using the nRF52840's built-in SWO "debug UART" is out.
+
+## Virtual serial port
+Besides SWD SWO, the "cleanest" way to get a debug UART is through the nano 33's USB interface. After all, that's how Arduino provides a serial console. Luckily, the [SDK](https://infocenter.nordicsemi.com/index.jsp?topic=%2Fstruct_sdk%2Fstruct%2Fsdk_nrf5_latest.html) provides an example exactly for this functionality. Unfortunately, it's an absolute mess. I don't want this to turn into a rant about the nRF5 SDK, so the short of it is that it's a jumble of legacy, not legacy, hals, components, modules, drivers and "apps" scattered throughout a folder & file hierarchy that hopefully makes sense to them, but not to me. And, you would think that after reaching SDK version 17+, the [SDK the documentation](https://infocenter.nordicsemi.com/index.jsp?topic=%2Fstruct_sdk%2Fstruct%2Fsdk_nrf5_latest.html) would be expansive if not amazing... but you would be wrong. The Makefile for the "virtual serial port" example compiles 62 source files and includes 43 directories. And all it does is implement the SDK's "USB CDC (Communications Device Class) ACM (Abstract Control Model) module". Sure, I could have copied the example verbatim, but the goal of this project is to learn, not copy. On top of this, the nRF52840 is configured through a single `sdk_config.h` file that's 12k lines and basically [undocumented](https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v15.0.0%2Fsdk_config.html)! And the examples don't even include the complete file- just what's enabled for that specific example... I guess it turned into a rant after all. Ok, let's move on.
+
+## UART
+The least elegant, but easiest option is to dedicate one of the nRF52840's 2 UARTs to be a serial debug console. Luckily there were two pins on the nano 33's headers, A6 (P0.28) and A7 (P0.03), that are unused on the carrier board and the nRF52840's flexible IO interconnect allows to become UART Tx and Rx pins. Unluckily, it turns out my debugger, the ST-Link/V2, does not have a built-in SWO input and virtual serial port of its own. So out comes my trusty [FTDI 232 USB to UART](https://ftdichip.com/products/ttl-232r-3v3/) to save the day. After soldering on some headers and digging out a USB hub (3 USB ports: 1 nano 33, 1 debugger, 1 UART/USB), we finally have a working `Hello World!`. Oof... this was way more complicated than it should have been. Oh, the SDK example for using the UART peripheral is... better. Mostly because UART is simpler than the whole USB stack that the USB CDC ACM module has to take care of.
+
+\-
+
+Maybe choosing bare-metal over Zephyr for this project was a bad idea.
+
 # March 13, 2022 - A slow blink
 It builds! It blinks! But it doesn't talk. Yet. Ok, the good news first:
 ## Building for the nano 33
