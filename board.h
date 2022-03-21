@@ -57,6 +57,29 @@ extern "C" {
 // Disable HW flow control
 #define UART_HWFC APP_UART_FLOW_CONTROL_DISABLED
 
+// OV7675 breakout-board to nRF52840 pinmap
+#define CAMERA_SCL_PIN    NRF_GPIO_PIN_MAP(0,2)
+#define CAMERA_SDA_PIN    NRF_GPIO_PIN_MAP(0,31)
+
+#define CAMERA_VS_PIN     NRF_GPIO_PIN_MAP(0,21)
+#define CAMERA_HS_PIN     NRF_GPIO_PIN_MAP(0,5)
+
+#define CAMERA_PCLK_PIN   NRF_GPIO_PIN_MAP(0,4)
+#define CAMERA_XCLK_PIN   NRF_GPIO_PIN_MAP(0,27)
+
+// D0 & D1 might be swapped on the schematic & pcb
+#define CAMERA_D0_PIN     NRF_GPIO_PIN_MAP(1,2)
+#define CAMERA_D1_PIN     NRF_GPIO_PIN_MAP(1,3)
+#define CAMERA_D2_PIN     NRF_GPIO_PIN_MAP(1,10)
+#define CAMERA_D3_PIN     NRF_GPIO_PIN_MAP(1,11)
+#define CAMERA_D4_PIN     NRF_GPIO_PIN_MAP(1,12)
+#define CAMERA_D5_PIN     NRF_GPIO_PIN_MAP(1,13)
+#define CAMERA_D6_PIN     NRF_GPIO_PIN_MAP(0,14)
+#define CAMERA_D7_PIN     NRF_GPIO_PIN_MAP(0,15)
+
+#define CAMERA_PWDN_PIN   NRF_GPIO_PIN_MAP(1,1)
+#define CAMERA_PEN_PIN    NRF_GPIO_PIN_MAP(1,8)
+
 // TODO Uncomment this line to use I2C1, otherwise it can be used
 // as SWO
 // #define I2C1_PULLUP     NRF_GPIO_PIN_MAP(1,0)

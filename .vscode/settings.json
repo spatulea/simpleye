@@ -7,5 +7,12 @@
     "nrf_gpio.h": "c",
     "nrf_uart.h": "c"
   },
-  "cmake.configureOnOpen": false
+  "cmake.configureOnOpen": false,
+  "cSpell.words": [
+    "gpio",
+    "NVIC",
+    "NVMC",
+    "simpleye",
+    "UICR"
+  ]
 }
