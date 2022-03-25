@@ -58,7 +58,10 @@
 #include "nrf_gpio.h"
 #include "nrf_uart.h"
 #include "nrf_uarte.h"
+<<<<<<< HEAD
 #include "nrf_twi_mngr.h"
+=======
+>>>>>>> origin/main
 
 // Nordic "app"
 #include "app_uart.h"
@@ -73,8 +76,12 @@
 
 static void show_error(void);
 void uart_error_handle(app_uart_evt_t *p_event);
+<<<<<<< HEAD
 static void simpleye_init(void);
 static void twi_config(void);
+=======
+static void simpleye_init();
+>>>>>>> origin/main
 
 void uart_error_handle(app_uart_evt_t *p_event)
 {
