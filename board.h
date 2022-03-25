@@ -44,13 +44,18 @@
 extern "C" {
 #endif
 
-
-
 #define LED_R          NRF_GPIO_PIN_MAP(0,24)
 #define LED_G          NRF_GPIO_PIN_MAP(0,16)
 #define LED_B          NRF_GPIO_PIN_MAP(0,6)
 #define LED_GS         NRF_GPIO_PIN_MAP(1,9)
 
+// UART pin definitions
+#define RX_PIN_NUMBER 28    // Using shield "A6"
+#define TX_PIN_NUMBER 3     // Using shield "A7"
+#define RTS_PIN_NUMBER UART_PIN_DISCONNECTED
+#define CTS_PIN_NUMBER UART_PIN_DISCONNECTED
+// Disable HW flow control
+#define UART_HWFC APP_UART_FLOW_CONTROL_DISABLED
 
 // OV7675 breakout-board to nRF52840 pinmap
 #define CAMERA_SCL_PIN    NRF_GPIO_PIN_MAP(0,2)
