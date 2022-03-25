@@ -11,7 +11,8 @@
                 "${workspaceFolder}/../nRF5_SDK_17.1.0/components/serialization/**",
                 "${workspaceFolder}/../nRF5_SDK_17.1.0/components/softdevice/**",
                 "${workspaceFolder}/../nRF5_SDK_17.1.0/components/toolchain/**",
-                "${workspaceFolder}/../nRF5_SDK_17.1.0/modules/**"
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/modules/**",
+                "${workspaceFolder}/../nRF5_SDK_17.1.0/integration/**"
             ],
             "defines": ["BOARD_PCA10056", "BSP_DEFINES_ONLY", "CONFIG_GPIO_AS_PINRESET", "FLOAT_ABI_HARD", "NRF52840_XXAA"],
             "macFrameworkPath": [],

@@ -58,6 +58,7 @@
 #include "nrf_gpio.h"
 #include "nrf_uart.h"
 #include "nrf_uarte.h"
+#include "nrf_twi_mngr.h"
 
 // Nordic "app"
 #include "app_uart.h"
@@ -72,7 +73,8 @@
 
 static void show_error(void);
 void uart_error_handle(app_uart_evt_t *p_event);
-static void simpleye_init();
+static void simpleye_init(void);
+static void twi_config(void);
 
 void uart_error_handle(app_uart_evt_t *p_event)
 {
@@ -98,7 +100,20 @@ static void show_error(void)
     }
 }
 
-static void simpleye_init()
+static void twi_config(void) {
+    uint32_t err_code;
+
+    nrf_drv_twi_config_t const config = {
+        .scl = CAMERA_SCL_PIN,
+        .sda = CAMERA_SDA_PIN,
+        .frequency = NRF_DRV_TWI_FREQ_100K,
+        .interrupt_priority = APP_IRQ_PRIORITY_HIGHEST,
+        .clear_bus_init = false
+
+    };
+}
+
+static void simpleye_init(void)
 {
     // Ensure REGOUT0 is set to 3.0V to make sure we can interface with SWD
     // if UICR (???) is ever erased
@@ -143,7 +158,8 @@ static void simpleye_init()
             CTS_PIN_NUMBER,
             UART_HWFC,
             false,
-            NRF_UARTE_BAUDRATE_115200};
+            NRF_UARTE_BAUDRATE_115200
+        };
 
     APP_UART_FIFO_INIT(&comm_params,
                        UART_RX_BUF_SIZE,
