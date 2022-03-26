@@ -58,7 +58,7 @@
 #include "nrf_gpio.h"
 #include "nrf_uart.h"
 #include "nrf_uarte.h"
-#include "nrf_twi_mngr.h"
+#include "nrf_drv_twi.h"
 
 // Nordic "app"
 #include "app_uart.h"
@@ -78,7 +78,7 @@
 #define TWI_INSTANCE_ID 0
 #define MAX_PENDING_TRANSACTIONS    5
 
-NRF_TWI_MNGR_DEF(simpleye_twi_mngr, MAX_PENDING_TRANSACTIONS, TWI_INSTANCE_ID);
+static const nrf_drv_twi_t simpleye_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 
 uint8_t prod_reg0_data = 32;
 uint8_t prod_reg1_data = 42;
@@ -87,6 +87,7 @@ static void show_error(void);
 void uart_error_handle(app_uart_evt_t *p_event);
 static void simpleye_init(void);
 static void twi_init(void);
+static void camera_clk_init(void);
 void twi_mngr_handler(void);
 
 void uart_error_handle(app_uart_evt_t *p_event)
@@ -129,9 +130,39 @@ static void twi_init(void) {
         .clear_bus_init = false
     };
 
-    err_code = nrf_twi_mngr_init(&simpleye_twi_mngr, &simpleye_twi_config);
-
+    err_code = nrf_drv_twi_init(&simpleye_twi, &simpleye_twi_config, NULL, NULL);
     APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&simpleye_twi);
+}
+
+static void camera_clk_init(void) {
+    NRF_CLOCK->TASKS_HFCLKSTART = 1; //Start high frequency clock
+    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
+    {
+        //Wait for HFCLK to start
+    }
+    NRF_CLOCK->EVENTS_HFCLKSTARTED = 0; //Clear event
+    
+    
+    //Configure GPIOTE to toggle pin 18 
+    NRF_GPIOTE->CONFIG[0] = GPIOTE_CONFIG_MODE_Task << GPIOTE_CONFIG_MODE_Pos |
+                            GPIOTE_CONFIG_POLARITY_Toggle << GPIOTE_CONFIG_POLARITY_Pos |
+                            CAMERA_XCLK_PIN << GPIOTE_CONFIG_PSEL_Pos | 
+                            GPIOTE_CONFIG_OUTINIT_Low << GPIOTE_CONFIG_OUTINIT_Pos;
+    
+    //Configure timer
+    NRF_TIMER1->PRESCALER = 0;
+    NRF_TIMER1->CC[0] = 1;  // Adjust the output frequency by adjusting the CC.
+    NRF_TIMER1->SHORTS = TIMER_SHORTS_COMPARE0_CLEAR_Enabled << TIMER_SHORTS_COMPARE0_CLEAR_Pos;
+    NRF_TIMER1->TASKS_START = 1;
+    
+    //Configure PPI
+    NRF_PPI->CH[0].EEP = (uint32_t) &NRF_TIMER1->EVENTS_COMPARE[0];
+    NRF_PPI->CH[0].TEP = (uint32_t) &NRF_GPIOTE->TASKS_OUT[0];
+    
+    NRF_PPI->CHENSET = PPI_CHENSET_CH0_Enabled << PPI_CHENSET_CH0_Pos;
+
 }
 
 static void simpleye_init(void)
@@ -196,53 +227,40 @@ static void simpleye_init(void)
     nrf_gpio_cfg_output(CAMERA_PWDN_PIN);
     nrf_gpio_pin_clear(CAMERA_PWDN_PIN);
 
-    // Initialize I2C "manager"
-    // twi_init();
+    // Enable XCLK
+    camera_clk_init();
 
-        const nrf_drv_twi_config_t  simpleye_twi_config = {
-        .scl = CAMERA_SCL_PIN,
-        .sda = CAMERA_SDA_PIN,
-        .frequency = NRF_DRV_TWI_FREQ_100K,
-        .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
-        .clear_bus_init = false
-    };
-
-    err_code = nrf_twi_mngr_init(&simpleye_twi_mngr, &simpleye_twi_config);
-
-    APP_ERROR_CHECK(err_code);
+    // Initialize I2C peripheral
+    twi_init();
 
     const uint8_t init_read_addresses[] = { OV7675_REG_PROD_ID_1, OV7675_REG_PROD_ID_2 };
+    uint8_t sample_data = 0;
 
-    nrf_twi_mngr_transfer_t const camera_read[4] = {
-        NRF_TWI_MNGR_WRITE(OV7675_I2C_ADDRESS,&init_read_addresses[0],1,NRF_TWI_MNGR_NO_STOP),
-        NRF_TWI_MNGR_READ(OV7675_I2C_ADDRESS,&prod_reg0_data,1,0),
-        NRF_TWI_MNGR_WRITE(OV7675_I2C_ADDRESS,&init_read_addresses[1],1,NRF_TWI_MNGR_NO_STOP),
-        NRF_TWI_MNGR_READ(OV7675_I2C_ADDRESS,&prod_reg1_data,1,0)
-    };
+    printf("Starting I2C address search...\n\r");
+    for (uint8_t address = 0x41; address < 0x45; address++) {
+        err_code = nrf_drv_twi_rx(&simpleye_twi, address, &sample_data, sizeof(sample_data));
+        printf("Address = 0x%x, err_code = 0x%x\r\n",address,err_code);
+        nrf_delay_ms(100);
+        if (err_code == NRF_SUCCESS) {
+            printf("I2C found at address 0x%x\n\r",address);
+        }
+    }
 
-    // static nrf_twi_mngr_transaction_t get_camera_ids = {
-    //     .callback = null,
-    //     .p_user_data = null,
-    //     .p_transfers = camera_read,
-    //     .number_of_transfers = sizeof(camera_read) / sizeof(camera_read[0]),
-    //     .p_required_twi_cfg = NULL
-    // };
-
-    err_code = nrf_twi_mngr_perform(&simpleye_twi_mngr, &simpleye_twi_config, camera_read, sizeof(camera_read) / sizeof(camera_read[0]), twi_mngr_handler );
-    printf("\r\n\r\n");
-    printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
-    printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
+    // err_code = nrf_twi_mngr_perform(&simpleye_twi_mngr, &simpleye_twi_config, camera_read, sizeof(camera_read) / sizeof(camera_read[0]), twi_mngr_handler );
+    // printf("\r\n\r\n");
+    // printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
+    // printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
 
     // err_code = NRF_TWI_MNGR_TRANSFER()
     // Check camera product IDs
     // nrf_twi_mngr_perform
 }
 
-void twi_mngr_handler(void) {
-    printf("handler called\r\n");
-    printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
-    printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
-}
+// void twi_mngr_handler(void) {
+//     printf("handler called\r\n");
+//     printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
+//     printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
+// }
 
 /**
  * @brief Function for application main entry.
@@ -251,7 +269,7 @@ int main(void)
 {
     simpleye_init();
 
-    printf("\r\nUART example started.\r\n");
+    printf("\r\nIn main().\r\n");
 
     while (true)
     {

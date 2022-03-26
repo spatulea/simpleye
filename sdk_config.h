@@ -1097,7 +1097,7 @@
  
 
 #ifndef NRF_TWI_MNGR_ENABLED
-#define NRF_TWI_MNGR_ENABLED 1
+#define NRF_TWI_MNGR_ENABLED 0
 #endif
 
 // <q> RETARGET_ENABLED  - retarget - Retargeting stdio functions
