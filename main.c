@@ -67,14 +67,27 @@
 // This board
 #include "board.h"
 
+// Camera
+#include "OV7675.h"
+
 // UART defines
 #define UART_TX_BUF_SIZE 256      /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE 256      /**< UART RX buffer size. */
 
+// TWI defines
+#define TWI_INSTANCE_ID 0
+#define MAX_PENDING_TRANSACTIONS    5
+
+NRF_TWI_MNGR_DEF(simpleye_twi_mngr, MAX_PENDING_TRANSACTIONS, TWI_INSTANCE_ID);
+
+uint8_t prod_reg0_data = 32;
+uint8_t prod_reg1_data = 42;
+
 static void show_error(void);
 void uart_error_handle(app_uart_evt_t *p_event);
 static void simpleye_init(void);
-static void twi_config(void);
+static void twi_init(void);
+void twi_mngr_handler(void);
 
 void uart_error_handle(app_uart_evt_t *p_event)
 {
@@ -100,17 +113,25 @@ static void show_error(void)
     }
 }
 
-static void twi_config(void) {
+static void uart_init(void) {
+
+    
+}
+
+static void twi_init(void) {
     uint32_t err_code;
 
-    nrf_drv_twi_config_t const config = {
+    const nrf_drv_twi_config_t  simpleye_twi_config = {
         .scl = CAMERA_SCL_PIN,
         .sda = CAMERA_SDA_PIN,
         .frequency = NRF_DRV_TWI_FREQ_100K,
-        .interrupt_priority = APP_IRQ_PRIORITY_HIGHEST,
+        .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
         .clear_bus_init = false
-
     };
+
+    err_code = nrf_twi_mngr_init(&simpleye_twi_mngr, &simpleye_twi_config);
+
+    APP_ERROR_CHECK(err_code);
 }
 
 static void simpleye_init(void)
@@ -147,6 +168,7 @@ static void simpleye_init(void)
     nrf_gpio_pin_set(LED_G);
     nrf_gpio_pin_set(LED_B);
 
+
     // Configure UART for debug output
     uint32_t err_code;
 
@@ -169,6 +191,57 @@ static void simpleye_init(void)
                        err_code);
 
     APP_ERROR_CHECK(err_code);
+
+    // Initialize camera pins
+    nrf_gpio_cfg_output(CAMERA_PWDN_PIN);
+    nrf_gpio_pin_clear(CAMERA_PWDN_PIN);
+
+    // Initialize I2C "manager"
+    // twi_init();
+
+        const nrf_drv_twi_config_t  simpleye_twi_config = {
+        .scl = CAMERA_SCL_PIN,
+        .sda = CAMERA_SDA_PIN,
+        .frequency = NRF_DRV_TWI_FREQ_100K,
+        .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+        .clear_bus_init = false
+    };
+
+    err_code = nrf_twi_mngr_init(&simpleye_twi_mngr, &simpleye_twi_config);
+
+    APP_ERROR_CHECK(err_code);
+
+    const uint8_t init_read_addresses[] = { OV7675_REG_PROD_ID_1, OV7675_REG_PROD_ID_2 };
+
+    nrf_twi_mngr_transfer_t const camera_read[4] = {
+        NRF_TWI_MNGR_WRITE(OV7675_I2C_ADDRESS,&init_read_addresses[0],1,NRF_TWI_MNGR_NO_STOP),
+        NRF_TWI_MNGR_READ(OV7675_I2C_ADDRESS,&prod_reg0_data,1,0),
+        NRF_TWI_MNGR_WRITE(OV7675_I2C_ADDRESS,&init_read_addresses[1],1,NRF_TWI_MNGR_NO_STOP),
+        NRF_TWI_MNGR_READ(OV7675_I2C_ADDRESS,&prod_reg1_data,1,0)
+    };
+
+    // static nrf_twi_mngr_transaction_t get_camera_ids = {
+    //     .callback = null,
+    //     .p_user_data = null,
+    //     .p_transfers = camera_read,
+    //     .number_of_transfers = sizeof(camera_read) / sizeof(camera_read[0]),
+    //     .p_required_twi_cfg = NULL
+    // };
+
+    err_code = nrf_twi_mngr_perform(&simpleye_twi_mngr, &simpleye_twi_config, camera_read, sizeof(camera_read) / sizeof(camera_read[0]), twi_mngr_handler );
+    printf("\r\n\r\n");
+    printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
+    printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
+
+    // err_code = NRF_TWI_MNGR_TRANSFER()
+    // Check camera product IDs
+    // nrf_twi_mngr_perform
+}
+
+void twi_mngr_handler(void) {
+    printf("handler called\r\n");
+    printf("OV7675 id reg 0 = %x\r\n",prod_reg0_data);
+    printf("OV7675 id reg 1 = %x\r\n",prod_reg1_data);
 }
 
 /**
