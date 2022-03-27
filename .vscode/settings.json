@@ -5,7 +5,10 @@
     "pca10056.h": "c",
     "nrf_delay.h": "c",
     "nrf_gpio.h": "c",
-    "nrf_uart.h": "c"
+    "nrf_uart.h": "c",
+    "nrf_drv_clock.h": "c",
+    "nrfx_pwm.h": "c",
+    "app_pwm.h": "c"
   },
   "cmake.configureOnOpen": false,
   "cSpell.words": [
