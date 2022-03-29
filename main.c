@@ -58,16 +58,21 @@
 #include "nrf_gpio.h"
 #include "nrf_uart.h"
 #include "nrf_uarte.h"
+#include "nrf_ppi.h"
+
+// Nordic "nrfx"
+#include "nrfx_gpiote.h"
+#include "nrfx_ppi.h"
+#include "nrfx_timer.h"
 
 // Nordic "nrf_drv"
 #include "nrf_drv_twi.h"
 #include "nrf_drv_clock.h"
-#include "nrf_drv_pwm.h"
+#include "nrf_drv_ppi.h"
 
 // Nordic "app" libraries
 #include "app_uart.h"
 #include "app_error.h"
-#include "app_pwm.h"
 
 // This board
 #include "board.h"
@@ -85,15 +90,12 @@
 #define MAX_PENDING_TRANSACTIONS    5
 
 static const nrf_drv_twi_t simpleye_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
-// static const nrf_drv_pwm_t simpleye_pwm = NRF_DRV_PWM_INSTANCE(PWM_INSTANCE_ID);
-APP_PWM_INSTANCE(camera_xclk_using_pwm,1);
-static volatile bool ready_flag;
 
-void pwm_ready_callback(uint32_t pwm_id)    // PWM callback function
-{
-    ready_flag = true;
-}
+// Timer instance used to generate camera's XCLK
+static const nrfx_timer_t xclk_timer = NRFX_TIMER_INSTANCE(0);
 
+// PPI channel used to attach timer and GPIOTE together
+static nrf_ppi_channel_t xclk_ppi_channel;
 
 uint8_t prod_reg0_data = 32;
 uint8_t prod_reg1_data = 42;
@@ -103,7 +105,6 @@ void uart_error_handle(app_uart_evt_t *p_event);
 static void simpleye_init(void);
 static void twi_init(void);
 static void camera_clk_init(void);
-void twi_mngr_handler(void);
 
 void uart_error_handle(app_uart_evt_t *p_event)
 {
@@ -152,62 +153,42 @@ static void twi_init(void) {
 }
 
 static void camera_clk_init(void) {
-    // NRF_CLOCK->TASKS_HFCLKSTART = 1; //Start high frequency clock
-    // while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
-    // {
-    //     //Wait for HFCLK to start
-    // }
-    // NRF_CLOCK->EVENTS_HFCLKSTARTED = 0; //Clear event
-    
-    
-    // //Configure GPIOTE to toggle pin 18 
-    // NRF_GPIOTE->CONFIG[0] = GPIOTE_CONFIG_MODE_Task << GPIOTE_CONFIG_MODE_Pos |
-    //                         GPIOTE_CONFIG_POLARITY_Toggle << GPIOTE_CONFIG_POLARITY_Pos |
-    //                         CAMERA_XCLK_PIN << GPIOTE_CONFIG_PSEL_Pos | 
-    //                         GPIOTE_CONFIG_OUTINIT_Low << GPIOTE_CONFIG_OUTINIT_Pos;
-    
-    // //Configure timer
-    // NRF_TIMER1->PRESCALER = 0;
-    // NRF_TIMER1->CC[0] = 1;  // Adjust the output frequency by adjusting the CC.
-    // NRF_TIMER1->SHORTS = TIMER_SHORTS_COMPARE0_CLEAR_Enabled << TIMER_SHORTS_COMPARE0_CLEAR_Pos;
-    // NRF_TIMER1->TASKS_START = 1;
-    
-    // //Configure PPI
-    // NRF_PPI->CH[0].EEP = (uint32_t) &NRF_TIMER1->EVENTS_COMPARE[0];
-    // NRF_PPI->CH[0].TEP = (uint32_t) &NRF_GPIOTE->TASKS_OUT[0];
-    
-    // NRF_PPI->CHENSET = PPI_CHENSET_CH0_Enabled << PPI_CHENSET_CH0_Pos;
-
-    
-    // nrf_drv_pwm_config_t const config0 =
-    // {
-    //     .output_pins =
-    //     {
-    //         CAMERA_XCLK_PIN | NRF_DRV_PWM_PIN_INVERTED, // channel 0
-    //     },
-    //     .irq_priority = APP_IRQ_PRIORITY_LOWEST,
-    //     .base_clock   = NRF_PWM_CLK_16MHz,
-    //     .count_mode   = NRF_PWM_MODE_UP,
-    //     .top_value    = m_demo1_top,
-    //     .load_mode    = NRF_PWM_LOAD_INDIVIDUAL,
-    //     .step_mode    = NRF_PWM_STEP_AUTO
-    // };
-    // APP_ERROR_CHECK(nrfx_pwm_init(&simpleye_pwm, &config0, NULL));
-
-    // m_demo1_seq_values.channel_0 = 0;
-    // m_demo1_phase                = 0;
-
-    // (void)nrfx_pwm_simple_playback(&m_pwm0, &m_demo1_seq, 1,
-    //                                   NRF_DRV_PWM_FLAG_LOOP);
     uint32_t err_code;
 
-    app_pwm_config_t pwm_config = APP_PWM_DEFAULT_CONFIG_1CH(10,CAMERA_XCLK_PIN);
-    err_code = app_pwm_init(&camera_xclk_using_pwm,&pwm_config,NULL);
-    APP_ERROR_CHECK(err_code);
-    app_pwm_enable(&camera_xclk_using_pwm);
+    // Configure a toggling GPIOTE out task
+    static const nrfx_gpiote_out_config_t xclk_gpiote_config = NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE(1);
 
-    /* Set the duty cycle - keep trying until PWM is ready... */
-    while (app_pwm_channel_duty_set(&camera_xclk_using_pwm, 0, 50U) == NRF_ERROR_BUSY);
+    // Initialize the GPIOTE if it is not already
+    if (!nrfx_gpiote_is_init()) {
+        err_code = nrfx_gpiote_init();
+        APP_ERROR_CHECK(err_code);
+    }
+
+    // Configure the XCLK camera pin as GPIOTE OUT
+    err_code = nrfx_gpiote_out_init(CAMERA_XCLK_PIN,&xclk_gpiote_config);
+
+    // Enable the GPIOTE output pin task (is this needed?)
+    nrfx_gpiote_out_task_enable(CAMERA_XCLK_PIN);
+
+    // Configure the timer
+    nrfx_timer_config_t xclk_timer_config = NRFX_TIMER_DEFAULT_CONFIG;
+    xclk_timer_config.frequency = NRF_TIMER_FREQ_16MHz;
+
+    // Initialize the timer without an event handler
+    err_code = nrfx_timer_init(&xclk_timer,&xclk_timer_config,NULL);
+
+    // Initialize PPI ignoring error if already initialized
+    nrf_drv_ppi_init();
+
+    // Allocate a free PPI channel
+    nrfx_ppi_channel_alloc(&xclk_ppi_channel);
+
+    // Assign the event and task to the PPI
+    nrfx_ppi_channel_assign(xclk_ppi_channel,
+                            nrfx_timer_event_address_get(&xclk_timer,NRF_TIMER_EVENT_COMPARE0),
+                            nrfx_gpiote_out_task_addr_get(CAMERA_XCLK_PIN));
+    
+    nrfx_timer_enable(&xclk_timer);
 
 }
 

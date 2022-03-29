@@ -8,7 +8,12 @@
     "nrf_uart.h": "c",
     "nrf_drv_clock.h": "c",
     "nrfx_pwm.h": "c",
-    "app_pwm.h": "c"
+    "app_pwm.h": "c",
+    "nrf_uarte.h": "c",
+    "nrfx_gpiote.h": "c",
+    "nrfx_ppi.h": "c",
+    "nrf_ppi.h": "c",
+    "nrf_drv_ppi.h": "c"
   },
   "cmake.configureOnOpen": false,
   "cSpell.words": [
